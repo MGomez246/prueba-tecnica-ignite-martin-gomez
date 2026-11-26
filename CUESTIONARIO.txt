@@ -28,7 +28,24 @@ Explica:
 
 RESPUESTA:
 
-
+- Es un lenguaje de programacion dinamico, que es interpretado y utilizado principalmente en el servidor.
+- Es un framework opensource basado completamente en php, orientado en patrones MVC y definir convenciones claras.
+- PHP nos proporciona el lenguaje, sin embargo, no nos dice cómo debemos organizar y desarrollar, para eso laravel se
+  encarga de proporcionarnos estructura y arquitectura de carpetas, convenciones, validaciones, autenticaciones, entre
+  otras, para de esa manera evitar codigo repetitivo.
+- 1. Migraciones: Nos otorga versionamiento, historial y control del esquema y estructura de la base de datos
+  2. Middleware: Proporciona filtros y validaciones antes de entrar en el flujo, o al controlador
+  3. Artisan: Toda su consola de comandos, donde podemos ejecutar tareas, automatizar y generar codigo repetitivo
+  4. Blade: El motor principal de las plantillas, para front html reutilizable
+- Para crear scripts funcionales para tareas repetitivas y especificas por ejemplo, revisar hojas de cálculo y generar
+  informes o ejecutar un servicio específico con una funcionalidad puntual sin tener que levantar toda una estructura
+- Para montar toda una api completa, que comprenda su arquitectura, muchas rutas, muchos endpoints, con autenticaciones,
+  consutlas a una base de datos, validaciones, migraciones, tests, algo en lo que varias personas tengamos que trabajar
+  y mantener un orden
+- Realmente esa afirmacion no es verdadera, porque Laravel no es el lenguaje de programacion, es decir, para escribir
+  clases, controladores, request, validaciones, logica en general, será escrito en PHP, sin embargo, como Laravel cuenta
+  con Artisan es posible generar plantillas, pero el codigo que contenga esas plantillas y su logica iran en PHP,
+  laravel ofrese funcionalidades, pero no elimina el lenguaje
 
 ===============================================================================
 PREGUNTA 2 — ESTRUCTURAS DE DATOS
@@ -50,8 +67,28 @@ Para cada caso explica:
 
 RESPUESTA:
 
-
-
+- Cola, se basa en el principio, que el primero que entra es el primero que sale (FIFO), cuando se insertan solicitudes
+  al final y se saca la primera que llego es instantaneo, porque la busqueda siempre empieza donde se sabe donde empieza
+  y donde termina, pero si es necesario buscar una solicitud en específico, el proceso se ralentiza, por ejemplo en
+  buscar una solicitud en medio de la lista, ya que es necesario hacer una revision una a una.
+  Alternativa: Cola de prioridad, para este escenario sería peor, porque el orden de prioridad de cada elemento no
+  depende del orden de llegada, lo que en dado caso conllevaria una busqueda a un usuario en específico
+- Pila, el principio es similar, el último que entra es el primero que saldra (LIFO), el guardar una actividad o
+  quitarla (deshacerla) se ejecuta instantaneo, porque en la lista trabajamos con lo que está al inicio, y de esa manera
+  nos ahorramos el tener que tocar el resto de la lista.
+  Alternativa: almacenar copias completas de cada documento, es mucho más sencillo de codificar, sacrificando más
+  memoria en vez de solo guardar las acciones
+- HashMap, como cada elemento tiene su identificador unico, la funcion se encargara de calcular cuál es la pocision
+  específica en la que se encuentra almacenada en la memoria, de esa manera cualquier transaccion, ya sea insertar,
+  buscar o borrar un registro o usuario es instantaneo, eso como tener una coordenada exacta, sin embargo, el unico
+  problema es que varios identificadores compartan un mismo espacio en memoria.
+  ALternativa: Arbol balanceado o arbol binario, su velocidad es menor a la funcion hash, a cambio de un mayor orden en
+  los datos y además, permite rangos y busquedas ordenadas.
+- Grafo, se modela cada uno de los usuarios que representan los nodos y las relaciones como aristas entre los nodos, asi
+  se logra que al crear un nodo o una relacion sea muy rapido, es decir, al realizar una busqueda de la relacion entre
+  dos personas, depende especialmente de cuantas relaciones tenga ese nodo, sin la necesidad de revisar el resto.
+  Alternativa: Matriz de adyacencia, es excelente para comprobar conexiones directas entre dos nodos concretos ya sea en
+  redes pequeñas o con una densidad demasiado extensa, sin embargo, sacrifica una gran cantidad de memoria
 
 ===============================================================================
 PREGUNTA 3 — PROBLEMA SENCILLO DE PHP
@@ -100,8 +137,39 @@ Explica:
 
 RESPUESTA:
 
+function countWords( string $text ): array
+{
+    $text = mb_strtolower( $text, 'UTF-8' );
 
+    $words = preg_split( '/[^\p{L}\p{M}\p{N}]+/u', $text, -1, PREG_SPLIT_NO_EMPTY );
 
+    if ( $words === false || $words === [] ) {
+        return [];
+    }
+
+    $counts = array_count_values($words);
+
+    uksort($counts, fn ($a, $b) => $counts[$b] <=> $counts[$a] ?: strcmp((string) $a, (string) $b));
+
+    return $counts;
+}
+
+Funciones:
+  1. mb_strtolower: encargada de pasar todo a minusculas, respetando las tildes y el formato de codificacion
+  2. preg_split: usa una expresion regular, como un separador, para dividir el texto en palabras
+  3. array_count_values: recorre el array de palabras devuelto, y genera el conteo de cuantas veces aparece cada una
+  4. uksort: se encarga de ordenar el conteo según las reglas de comparacion de las claves
+
+- Maneje la puntuacion y los espacios con una expresion regular '/[^\p{L}\p{M}\p{N}]+/u', de esta manera lo que no
+  corresponda a una letra (\p{L}), lo que marca los acentos o tildes (\p{M}) o número (\p{N}) es tratado como un
+  separador y '+' reune varios espacios o puntuaciones como un solo corte y para manejar los huecos vacios la constante
+  'PREG_SPLIT_NO_EMPTY' que ya se encarga con su funcionamiento
+
+- Al llegar un texto vacio o un escenario donde solo lleguen espacios y/o signos de puntuacion, solo se retornara
+  un array vacio, ademas de que la validacion, corta si preg_split retorna como false
+
+- Para poder manejar correctamente la codificacion y los acentos, sin correr el riesgo de que se corrompiera, se utiliza
+  mb_strtolower en vez de strtolower y luego en la expresion regular se usa '/u', para activar el unicode.
 
 ===============================================================================
 PREGUNTA 4 — COMPLETAR CONSULTA SQL
@@ -158,7 +226,27 @@ Explica:
 
 RESPUESTA:
 
+Consulta:
+SELECT
+    u.id AS user_id,
+    u.name,
+    COUNT(o.id) AS approved_order_count,
+    COALESCE(SUM(o.total), 0) AS total_spent
+FROM users u
+LEFT JOIN orders o
+    ON o.user_id = u.id
+    AND o.status = 'APPROVED'
+    AND o.created_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+GROUP BY u.id, u.name
+ORDER BY total_spent DESC;
 
+- Uno de los requisitos, era que se obtuvieran todos los usuarios incluso los que no tienenen compras aprovadas,
+  'LEFT JOIN', se encarga de conservar todos los usuarios, eso sin importar si tienen o no pedidos
+- Los filtros deben ir dentro de 'ON', porque lo hicieramos con 'WHERE', aquellos usuarios que no cuentan con órdenes
+  aprovadas se perderian, con eso se mantiene el funcionamiento de 'LEFT JOIN' y no pasa a ser un 'INNER JOIN'
+- Esta funcion se encarga directamente de retornar el primer valor que no sea NULL, es por eso que al sumar el total de
+  órdenes, si regresa como NULL, es reemplazado por 0
+- El 'LEFT JOIN' se convertiria en un 'INNER JOIN', y como explique los usuarios sin órdenes aprovadas, son eliminados
 
 
 ===============================================================================
@@ -188,8 +276,36 @@ Incluye:
 
 RESPUESTA:
 
+Indices:
+CREATE INDEX CONCURRENTLY idx_orders_user_approved_created
+    ON orders (user_id, created_at DESC)
+    INCLUDE (id, total)
+    WHERE status = 'APPROVED';
 
+Orden:
+  1. user_id: reune de golpe y por completo el conjunto de las filas del usuario
+  2. created_at DESC: se ejecuta luego de los usuarios, para hacer un filtrado descendente de la fecha de creacion y
+                      mantener el orden que requiere 'ORDER BY'
+  Columnas cubrientes
+    INCLUDE (id, total): Simplemente, se incluyen para obtener la proyeccion de las columnas sin extender la busqueda
 
+- Utilizaria un índice parcial, ya que 'WHERE status = 'APPROVED'' prioriza el mostrar solo aquellos pedidos que están
+  aprovados asi se reduce el peso y consume menos espacio.
+
+- Para poder verificar la utilidad del índice es necesario correr 'EXPLAIN (ANALYZE, BUFFERS)', este comando, se ejecuta
+  directamente en la consulta y se encarga de generar un escaneo sobre el índice, en caso de que PostgreSQL haya hecho
+  uso del índice lanzaria un rusultado como 'Index Scan' o en su defecto 'Index Only Scan'
+
+- El problema principal del uso excesivo de índices, es el relentizamiento de los metodos transaccionales principales,
+  es decir, 'INSERT', 'UPDATE' y 'DELETE', y esto ocurre, porque para PostgreSQL es necesario mantener, cada estructura
+  de manera organizada, eso conlleva a que deba utilizarse más espacio tanto en disco como en memoria acarreando
+  otros problemas
+
+- Existen diferentes motivos, pero entre los principales están:
+  1. Que el resultado de una consulta sea un número muy grande de filas
+  2. Que las estadisticas esten desactualizadas, lo que significa que PostgreSQL trabaja con información antigua en
+     comparacion a los datos de las tablas
+  3. Cuando es necesario filtrar por un estado diferente, en este caso a 'APPROVED'
 
 ===============================================================================
 PREGUNTA 6 — PROCESO DE CI/CD
@@ -221,8 +337,109 @@ Puedes incluir un diagrama o un ejemplo de GitHub Actions.
 
 RESPUESTA:
 
+Diferencia:
+  1. Integracion continua: Consiste en que cada desarrollador integre cambios con frecuencia y que la plataforma ejecute
+                           automáticamente tareas como instalar dependencias y correr pruebas para detectar errores
+  2. Entrega continua: De la misma manera cada cambio debe quedar validado y listo para ser llevado a produccion, para
+                       cuando pase por la fase final de aprobacion por parte del equipo.
+  3. Despliegue continuo: Por último, esos cambios deben ser llevados a produccion de manera automatica y es necesario
+                          que todo cambio supere todos los procesos de validaciones y pruebas sin la necesidad de
+                          intervenir manualmente.
+- En GitHub, al recibirse el push, se comparan los eventos con los disparadores, que normalmente están configurados en
+  github/workflows/*.yml y GitHub Actions arranca los jobs en máquinas llamadas runners.
+- Se instala PHP en la versión del proyecto y se ejecuta 'composer install --no-interaction --prefer-dist', luego en
+  la carpeta 'vendor' se guarda en caché usando el hash de 'composer.lock' para acelerar el levantamiento del entorno
+  más adelante.
+- En este caso se corre 'vendor/bin/pint --test' el cual revisa el estilo del código, de esa manera PHPStan (o Larastan)
+  es capas de detectar errores de tipos sin siquiera levantar el codigo y 'composer audit' revisa dependencias
+  para validar que no queden vulnerabilidades.
+- Ejecutar pruebas es sencillo gracias a artisan con el comando 'php artisan test', el cual ejecuta las pruebas
+  unitarias, que evaluan la lógica y las de integración que son las rutas, middleware y base de datos  que todas
+  juntas funcionan correctamente, además se corren contra una base de datos de prueba.
+- En dado caso y solo si las pruebas pasaron y los cambios se encontraran en main, y al ejecutar el comando
+  'composer install --no-dev --optimize-autoloader', se complila el front si es que existe y se construye una imagen
+  Docker etiquetada con el hash del commit.
+- Estas variables por relja nunca iran en el respositorio, deben ser guardadas en GitHub Secrets y deben estar
+  separadas por ambiente con GitHub Environments o en un gestor como AWS Secrets Manager o Vault, y unicamente se
+  inyectan al desplegar.
+- Ya el despliegue se hace de manera automática al terminar la construcción y allí se ejecutan las migraciones, además
+  de una prueba de humo.
+- Es importante que antes de pasar a producción, el ambiente exige revisores, que es una persona o un grupo de personas
+  del equipo que valida staging y aprueba y con esa aprobacion el proceso continúa.
+- Luego en el despliegue se ejecuta 'php artisan migrate --force', y las migraciones deben ser compatibles hacia atrás,
+  para poder agregar columnas antes de que el código las use y se elimina lo antiguo que solo en un despliegue
+  posterior, y siempre es importante verificar con anterioridad que exista un respaldo reciente.
+- Ahora se prepara la nueva versión aparte, se cachea la configuración, las rutas y vistas con 'php artisan optimize' y
+  se cambia el tráfico a la versión nueva, se recarga PHP-FPM y se reinician los workers de colas con
+  'php artisan queue:restart'.
+- Se preparan pruebas de humo inmediatas y se mantiene en vigilancia de la tasa de errores 5xx, la latencia, la memoria
+  y los fallos en colas, con logs centralizados, a su vez puede ser utilizado una herramienta de errores como Sentry y
+  se presta atencion a las alertas.
+- Como cada versión es un artefacto etiquetado, volver atrás es nada más desplegar el artefacto anterior, sin tener que
+  recompilar, por eso para la base de datos es recomendable no confiar en 'php artisan migrate:rollback' en producción,
+  por eso las migraciones son compatibles hacia atrás, y se cuenta con respaldos y con feature flags para apagar una
+  función sin redesplegar.
+- En el caso en el que el job queda en rojo, el pull request muestra el fallo y, con protección de rama, que son los
+  checks obligatorios, no es posible fusionar y no se construye ningún artefacto ni se despliega nada, al autor recibira
+  la notificación, se hace la correccion y se hace un nuevo push, que reinicia el proceso.
 
+Ejemplo de GitHub Actions
+name: CI/CD
 
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, pdo, pdo_pgsql
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: vendor/bin/pint --test
+      - run: php artisan test
+
+  build:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/deploy.sh staging ${{ github.sha }}
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/deploy.sh production ${{ github.sha }}
 
 ===============================================================================
 PREGUNTA 7 — APIS HTTP Y CÓDIGOS DE RESPUESTA
@@ -249,7 +466,99 @@ Incluye ejemplos de:
 
 RESPUESTA:
 
+Como funciona:
+El cliente ya sea un navegador, una app movil u otra api, construye una soliocitud con un metodo, una URL, sus cabeceras
+correspondientes, por ejemplo Authorization, Content-Type, o Accept y en dado caso de que aplique un body en JSON, esa
+peticion es resuelta a travez de un dominio que contiene un DNS, lo que permite establecer a una conexion segura como
+TCP y generando la negociacion TLS si es HTTPS, luego el servidor recibe esa solicitud y se la entrega a la aplicacion
+en este caso Laravel para ser resuelta, donde el enrutamiento y los middleware ejecutan ciertas validaciones encargadas
+de la autenticacion, permisos y límites de uso, al llegar al controlador según el metodo y la ruta con la que concuerde,
+ejecuta la logica de negocio, se realiza la consulta a la base de datos, y el servicio devuelve una respuesta
+correspondiente con su codigo de estado, las cabeceras, y su body en caso de contar con uno, finalmente el cliente
+recibe la respuesta a su solicitud lee el codigo de estado y se procesa la respuesta dada por el servidor
 
+Diferencias metodos:
+- GET: solo lee o consulta recursos y no modifica ni altera los datos
+- POST: se encarga de crear un recurso o ejecutar una acción
+- PUT: reemplaza un recurso por completo
+- PATCH: modifica solo algunos campos de un recurso
+- DELETE: elimina un recurso
+
+- Significa que al repetir una misma solicitud el estado del servidor es el mismo que al de la ejecucion inicial, por
+  ejemplo, al ejecutar un DELETE de una orden con ID 5, la primera llamada elimina el registro correctamente, al volver
+  a ejecutar la misma pedicion hacia el mismo id, nos lanzara un codigo de error por ejemplo 404, pero el estado no
+  fue alterado, caso contrario que pasa con POST, al crear una orden, y ejecutar dos veces quedará dublicado el registro
+
+Diferencias autenticación y autorización:
+- Autenticación: se encarga de comprobar quién intento acceder, por ejemplo, con login y su token correspondiente,
+                 contesta la pregunta de "¿quién eres?".
+- Autorización: y autorizacion decide qué se puede hacer una vez identificado variables como rol y permisos,
+                esta contesta a "¿qué tienes permitido?".
+
+Diferencias entre codigos de estado:
+- 401 Unauthorized: Significa que no estás autenticado que te hace falta el token o que el token que tienes no es válido
+                    y normalmente se incluye en la cabecera WWW-Authenticate.
+• 403 Forbidden: Significa que estás autenticado, pero no tienes permiso para acceder a los recursos.
+
+Cuando se utilizan los estados:
+  1. 200 OK: la solicitud salió bien y hay un body
+  2. 201 Created: se creó correctamente un recurso
+  3. 204 No Content: se ejecutó correctamente, pero sin un body que devolver, normalmente un DELETE
+  4. 400 Bad Request: la solicitud está mal formada, un body JSON roto, un parámetro con un formato inválido
+  5. 404 Not Found: el recurso no existe.
+  6. 409 Conflict: existe un conflicto con el estado actual por ejemplo un correo ya registrado
+  7. 422 Unprocessable Content: el JSON es válido, pero no cumple las reglas de validación por ejemplo un correo con un
+                             formato incorrecto
+  8. 500 Internal Server Error: fallo inesperado del servidor
+
+- No deben exponerse consultas SQL, rutas de archivos, versiones de software, claves o tokens, datos personales ni
+  mensajes que revelen detalles internos del sistema es por eso que comúnmente se estandarizan respuestas de
+  error controladas.
+
+- Siguiendo un estandar estructural:
+  1. code: un identificador que la app se encarga de leer
+  2. message: un texto claro y objetivo
+  3. errors: detalle del error y si aplica el campo
+  4. request_id: un identificador para realizar un seguimiento a la solicitud en los logs
+
+Ejemplos
+  1. Solicitud exitosa
+  GET /api/reader/12 HTTP/1.1
+  Authorization: Bearer <token>
+  Accept: application/json
+
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+
+  {"code":"READER_ACCESS_GRANTED","data":{"title_id":12,"title_name":"Don Quijote"}}
+
+  2. Error de validacion
+  POST /api/users HTTP/1.1
+  Content-Type: application/json
+
+  {"name":"","email":"no-es-un-correo"}
+
+  HTTP/1.1 422 Unprocessable Content
+  Content-Type: application/json
+
+  {
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid.",
+    "errors": {
+      "name": ["The name field is required."],
+      "email": ["The email must be a valid email address."]
+    },
+    "request_id": "req_8f3a2c"
+  }
+
+  3. Intento de acceso sin autenticación
+  GET /api/reader/12 HTTP/1.1
+  Accept: application/json
+
+  HTTP/1.1 401 Unauthorized
+  Content-Type: application/json
+
+  {"code":"SSO_REQUIRED","message":"Authentication is required to access this title."}
 
 ===============================================================================
 PREGUNTA 8 — ¿CÓMO APRENDE UNA RED NEURONAL?
@@ -261,6 +570,32 @@ Incluye qué papel cumplen la predicción, la función de pérdida y la retropro
 
 RESPUESTA:
 
+Entrenar una red neuronal, se basa en ajustar ciertos parametros, para que las predicciones que se ejecutaran, sean cada
+vez, más cercanas a las respuestas esperadas, es decir no es una programacion convencional de relgas, sino que dicha red
+juega con valores aleatorios, y en cada iteracion de error, ejecuta mediciones de cuanto se equivocó y corrige
+parametros poco a poco, hasta llegar a una respuesta esperada
+
+Clico de entrenamiento:
+  1. Entrada: Primeramente, se toma un lote de datos con sus respectivas respuestas correctas, por ejemplo, imágenes
+              de dígitos y qué dígito es cada una
+  2. Predicción: Luego los datos atraviesan las capas, donde cada neurona multiplica sus entradas por los parametros,
+                 suma y aplica una función de activación y la salida que retorna es la prediccion
+  3. Función de pérdida: Al comparar la predicción con la respuesta correcta y devolver un número que mide el error, se
+                         conoce como entropía cruzada para clasificar y mientras menor sea mejorara cada prediccion
+  4. Retropropagación: Ahora desde esa pérdida y continuando desde la salida hacia las primeras capas, se aplica una
+                       regla conocida como la cadena para calcular el gradiente, quiere decir, cuánto y en qué dirección
+                       cambiara el error si se moviera cada parametro.
+  5. Actualización de parametros: Se encarga un optimizador de mover cada parametro en dirección contraria a su
+                                  gradiente que se ve de la siguiente manera, parametro nuevo = parametro − tasa de
+                                  aprendizaje × gradiente
+  6. Repetición: Y al terminar el ciclo se repite con todos los lotes y durante muchos periodos, y los datos de
+                 validación se comprueban en la red generaliza
+
+Papel de cada pieza
+- Predicción: es lo que la red cree.
+- Función de pérdida: cuánto se equivocó.
+- Retropropagación: qué pesos tuvieron la culpa y cuánto.
+- Optimizador: cómo se corrigen.
 
 ===============================================================================
 PREGUNTA 9 — ¿CÓMO FUNCIONA UN MODELO DE IA GENERATIVA DE TEXTO?
@@ -276,7 +611,44 @@ Puedes usar un ejemplo breve, sin fórmulas.
 
 RESPUESTA:
 
+Es aquella área de la inteligencia artificial que se enlaza con la linguistica computacional la cual se dedica a que cada
+sistema entienda, interprete, procese y genere lenguaje humano, por ejemplo la manera en la que escribimos y como lo
+hacemos.
 
+Comparativa:
+  1. Clasificar el tema de un texto: la salida es una etiqueta de un conjunto cerrado, por ejemplo deportes, política o
+                                     economía. Es una única decisión y suele haber una respuesta correcta que puede ser
+                                     medida fácilmente.
+  2. Redactar un resumen: la salida es texto nuevo de longitud variable, es decir hay muchas respuestas válidas, y se
+                          construye pieza por pieza, es más difícil de evaluar y en el modelo puede inventar datos lo
+                          que puede generar impresiciones o desvios
+
+- Por otro lado, los tokes se perciben principalmente como unidades o fragmentos minimos de texto que el modelo va a
+  procesar, pero no como palabras sino como numeros, normalmente no equivalen a una palabra completa, es decir pueden
+  ser palabras enteras, subpalabras como, raíces, prefijos o terminaciones, signos de puntuación o espacios, y al
+  dividirlas en tokens es posible manejar un vocabulario finito y representar palabras raras o nuevas convinando las
+  ya conocidas.
+
+Que aprende:
+  1. Durante el entrenamiento: Si necesita leer grandes volúmenes de texto, el modelo aprende patrones estadísticos,
+                               gramaticales, semánticos y de conocimiento general, que usa principalmente para
+                               predecir el token que suele continuar a una secuencia dada.
+  2. Al generar texto: Si recibe el prompt convertido en tokens, calcula una distribución de probabilidad sobre posibles
+                        siguientes tokens, selecciona uno y lo agrega a la secuencia y ese proceso se repite paso a paso
+                        hasta completar la respuesta.
+
+Que aportan:
+  1. Mecanismo de atención: Esto le permite al modelo que cada token, al ser procesado, "mire" a los demás tokens de la
+                            secuencia y priorize cuáles son más relevantes para entender su significado
+
+  2. Arquitectura transformer: Se encarga de combinar la atención con capas neuronales que permiten procesar todos los
+                               tokens de una secuencia en paralelo, lo que permite escalar mucho mejor en contextos
+                               largos y grandes volúmenes de datos.
+
+Ejemplo:
+El ejemplo del banco, suele ser el más claro de entender y el más intuitivo, "Me senté en el banco del río" y
+"Fui al banco a retirar dinero", la palabra banco significa cosas distintas, pero, la atención hace que banco se apoye
+en río en la primera frase y en retirar dinero en la segunda, así que su representación cambia según el contexto.
 
 ===============================================================================
 PREGUNTA 10 — ¿CÓMO DISEÑARIAS UNA APLICACIÓN DE IA GENERATIVA SIN APAGAR POR UNA API?
@@ -291,7 +663,74 @@ breve de prompt para obtener un resumen con un formato definido.
 
 RESPUESTA:
 
+Modelo y herramientas:
+- Los motores de ejecución más recomendados suelen ser Ollama o llama.cpp / LM Studio, este permite levantar un servidor
+  HTTP local en la misma máquina y consumirlo desde la app, por ejemplo, desde Laravel/PHP o un script en Python sin
+  pagar APIs externas.
+- Modelo open-weight cuantizado: es un modelo ligero de ~7B a 8B parámetros con buen soporte en idioma español,
+  como Qwen 2.5 o Llama 3.1, que cabe en una gráfica doméstica de 8 GB de VRAM o en RAM del sistema.
 
+Dónde se ejecutaría:
+En local gracias a que este modelo corre directamente sobre la GPU, puede usar CUDA, ROCm o Metal según el hardware con
+el que se disponga para acelerar la inferencia, o sobre la CPU y RAM si no hay suficiente VRAM, exponiendo un endpoint
+por ejemplo http://localhost:11434
+
+Cómo manejar textos largos
+Los modelos locales cuentan con limitaciones de contexto y consumir mucho contexto degrada memoria y velocidad, entonces
+para poder resolverlo se usa chunking, que es dividir el texto por párrafos o secciones, junto con una estrategia
+de Map-Reduce o tamien conocido como refinamiento progresivo:
+- Map: resume cada fragmento por separado.
+- Reduce: reune esos resúmenes parciales y genera un resumen final unificado.
+
+Limitaciones esperadas:
+  1. Memoria: El modelo y la caché de contexto ocupan varios GB de VRAM o RAM, entonces en un equipo modesto se limita
+              el tamaño de contexto y obliga a usar cuantización.
+  2. Velocidad: La generación de tokens por segundo es menor que en la nube, lo que conlleva un aumento de la latencia
+                en textos largos o peticiones simultáneas.
+  3. Calidad: Al ser modelos más pequeños y cuantizados, suelen perder matices complejos, y no tener la capacidad de
+              seguir instrucciones muy largas o cometer alguna imprecisión si el texto fuente es muy técnico.
+
+Técnicas de prompting:
+  1. Asignación de rol + restricciones de salida: En la primera se define el papel del modelo, por ejemplo, editor
+                                                  técnico y fija reglas claras idioma español, no inventar datos fuera
+                                                  del texto, longitud máxima y estructura, asi se puede controlar el
+                                                  tono, reducir alucinaciones y obtener respuestas consistentes.
+  2. Few-shot prompting: Aquí se incluyen 1 o 2 ejemplos breves de cómo debe verse el resultado esperado, con esto el
+                         modelo respete exactamente el formato y el nivel de síntesis que se desean sin desviarse.
+
+Ejemplo:
+Eres un asistente que resume textos en español para lectores no expertos.
+
+Tarea: resume el texto que aparece entre <texto> y </texto>.
+
+Reglas:
+- Usa solo información del texto. Si algo no aparece, no lo agregues.
+- Escribe en español neutro.
+- No superes 80 palabras en total.
+
+Formato de salida (respétalo exactamente):
+Título: <máximo 8 palabras>
+Resumen:
+- <idea 1>
+- <idea 2>
+- <idea 3>
+Palabras clave: <3 a 5 palabras separadas por comas>
+
+Ejemplo
+<texto>
+La biblioteca municipal amplió su horario hasta las 10 p. m. los jueves y viernes. Además abrió una sala de estudio silenciosa con 40 puestos y habilitó el préstamo de portátiles por tres horas.
+</texto>
+Título: Biblioteca amplía horario y servicios
+Resumen:
+- Abre hasta las 10 p. m. los jueves y viernes.
+- Nueva sala de estudio silenciosa con 40 puestos.
+- Préstamo de portátiles por tres horas.
+Palabras clave: biblioteca, horario, sala de estudio, portátiles
+
+Ahora resume este texto:
+<texto>
+{TEXTO_A_RESUMIR}
+</texto>
 
 ===============================================================================
 FIN DEL CUESTIONARIO
